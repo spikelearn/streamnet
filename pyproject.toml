@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=42"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "streamnet"
+authors = [
+{ name="Angel Yanguas-Gil"}]
+version = "0.1.0"
+description = "A directed netlist representation for stream processing"
+readme = "README.md"
+keywords = ["netlist", "graphs", "networks", "programming models"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "numpy",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/spikelearn/streamnet"
