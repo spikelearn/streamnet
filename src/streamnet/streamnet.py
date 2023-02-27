@@ -29,8 +29,6 @@ class StreamNet:
 
     def __init__(self, return_values=True):
 
-        self._iports = []
-        self._iports_dict = {}
         self._oports = []
 
         self.inputs = DoubleList()
@@ -103,15 +101,9 @@ class StreamNet:
         Raises:
             ValueError: User tries to reuse an existing name
         """
-
-        if name in self._iports:
-            raise ValueError("Input {} already defined".format(name))
         
         if self.inputs.contains(name):
             raise ValueError("Input {} already defined".format(name))
-
-        self._iports.append(name)
-        self._iports_dict[name] = len(self._iports)-1
 
         self.inputs.append(name)
 
@@ -154,7 +146,7 @@ class StreamNet:
                 from_name = from_node.name
                 if from_node.port is None:
                     if self.input_exists(from_name):
-                        input_list.append(args[self._iports_dict[from_name]])
+                        input_list.append(args[self.inputs.index(from_name)])
                     else:
                         raise ValueError("Input {} not found".format(from_name))
 
@@ -170,7 +162,8 @@ class StreamNet:
 
         for op in self._oports:
             if op.port is None:
-                self.out.append(args[self._iports_dict[op.name]])
+                self.out.append(args[self.inputs.index(op.name)])
+
             else:
                 self.out.append(self._nodes[op.name].out[op.port])
         
@@ -209,7 +202,7 @@ class StreamNet:
         return name in self._nodes.keys()
     
     def input_exists(self, name):
-        return name in self._iports
+        return self.inputs.contains(name)
 
     def name_exists(self, name):
         return self.node_exists(name) or self.input_exists(name)
@@ -224,4 +217,4 @@ class StreamNet:
         return self._nodes.keys()[:]
 
     def get_input_names(self):
-        return self._iports[:]
+        return self.inputs.olist[:]
