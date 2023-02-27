@@ -29,16 +29,25 @@ class StreamNet:
 
     def __init__(self, return_values=True):
 
-        self._oports = []
-
-        self.inputs = DoubleList()
-
         self._nodes = {}
         self._node_inputs = {}
         self._node_outputs = {}
+
+        self._oports = []
+        self.inputs = DoubleList()
+
         self.return_values = return_values
 
     def from_dict(self, net_dict, object_dict, default_dict):
+        """Generate a streamnet from dictionary objects
+        
+        Args:
+            net_dict: dictionary with the network and connectivity
+            object_dict : dictionary with the objects associated with
+                each node.
+            default_dict : dictionary with the default values for each
+                node
+        """
         for input_name in net_dict["inputs"]:
             self.add_input(input_name)
         for node in net_dict["nodes"]:
@@ -60,7 +69,7 @@ class StreamNet:
 
         Args:
             name : the name of the new node
-            node : a node 
+            node : a Node object
 
         Raises:
             ValueError: User tries to reuse an existing name
@@ -126,6 +135,10 @@ class StreamNet:
         else:
             raise ValueError("node or Input {} not found".format(name))
 
+    @property
+    def node(self, node_name):
+        return self._nodes[node_name]
+
 
     def __call__(self, *args):
         """Runs the streamnet a single timestep
@@ -172,6 +185,15 @@ class StreamNet:
 
 
     def set_node_input(self, node_name, node_port, from_name, from_port=None):
+        """Sets the input connectivity of a input port of a node
+        
+        Args:
+
+            node_name : Name of the node
+            node_port : Input port number of the node
+            from_name : Name of the node or input connecting to the port
+            from_port : Output port number if input comes from a node
+        """
 
         if not self.node_exists(node_name):
             raise ValueError("Node {} not found".format(node_name))
@@ -187,6 +209,34 @@ class StreamNet:
             c = Conn(from_name, from_port-1)
 
         self._node_inputs[node_name][node_port-1] = c
+
+
+    def add_node_input(self, node_name, from_name, from_port=None):
+        """Adds and assigns an input port to a node
+        
+        Args:
+
+            node_name : Name of the node
+            from_name : Name of the node or input connecting to the port
+            from_port : Output port number if input comes from a node
+        """
+
+        if not self.node_exists(node_name):
+            raise ValueError("Node {} not found".format(node_name))
+        
+        
+        if from_port is None:
+            if not self.input_exists(from_name):
+                raise ValueError("Input {} not found".format(from_name))
+            c = Conn(from_name)
+        else:
+            if not self.node_exists(from_name):
+                raise ValueError("Node {} not found".format(from_name))
+
+            c = Conn(from_name, from_port-1)
+
+        self._node_inputs[node_name].append(c)
+        self.node[node_name].n_in += 1
 
 
     def set_node_inputs(self, node_name, conn_list):
@@ -210,7 +260,7 @@ class StreamNet:
 
     def broadcast(self, method_name, *method_args):
         for _, el in self._nodes.items():
-            f = getattr(el, method_name)
+            f = getattr(el.object, method_name)
             f(*method_args)
 
     def get_node_names(self):
